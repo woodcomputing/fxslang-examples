@@ -13,6 +13,10 @@ import static javafx.application.Application.launch;
 import javafx.collections.ListChangeListener;
 import javafx.scene.Scene;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -23,9 +27,7 @@ import javafx.stage.Stage;
 public class ListViewExample extends Application {
 
     private static final Logger LOG = Logger.getLogger(ListViewExample.class.getName());
-    
-    private final ObservableSlangList names = ObservableSlangList.empty();
-       
+           
     public static void main(String[] args) {
         launch(args);
     }
@@ -33,11 +35,13 @@ public class ListViewExample extends Application {
     @Override
     public void start(Stage primaryStage) {
         primaryStage.setTitle("FXSlang ListView Sample");        
-        
-        final ListView listView = new ListView(names);
+    
+        ObservableSlangList<String> names = ObservableSlangList.empty();
+    
+        final ListView<String> listView = new ListView(names);
         listView.setPrefSize(200, 250);
         
-        names.addListener((ListChangeListener.Change c) -> {
+        names.addListener((ListChangeListener.Change<? extends String> c) -> {
             while(c.next()) {
                 if(c.wasAdded()) {
                     for(Object name : c.getAddedSubList()) {
@@ -53,9 +57,24 @@ public class ListViewExample extends Application {
              "Lynne", "Myrtle", "Rose", "Rudolph", 
              "Tony", "Trudy", "Williams", "Zach"
         );
+
+        TextField searchField = new TextField();
+        searchField.addEventHandler(KeyEvent.KEY_RELEASED, (KeyEvent t) -> {
+            KeyCode key = t.getCode();
+            if (key == KeyCode.ESCAPE){
+                searchField.setText("");
+            } else {
+                if(!searchField.getText().isEmpty()) {
+                    listView.setItems(names.filter(name -> name.toLowerCase().startsWith(searchField.getText().toLowerCase())));
+                } else {
+                    listView.setItems(names);
+                }
+            }
+        });
         
-        StackPane root = new StackPane();
-        root.getChildren().add(listView);
+        BorderPane root = new BorderPane();
+        root.setCenter(listView);
+        root.setBottom(searchField);
         primaryStage.setScene(new Scene(root, 200, 250));
         primaryStage.show();
     }
